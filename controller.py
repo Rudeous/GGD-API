@@ -1,4 +1,3 @@
-import imp
 from flask import Flask, render_template, request, jsonify, json
 from flask_graphql import GraphQLView
 from model import Housing_Type, Gender, Marital_Status, Occupation_Type
@@ -49,6 +48,41 @@ def create_household():
     print(household_post_response.status_code)
     return json.dumps(household_post_response.json(), indent=4), household_post_response.status_code
 
+@app.route('/add_family_member', methods=['POST'])
+def add_family_member():
+    data = request.args
+    print(data)
+
+    household_id = data['household_id']
+    name = data['name']
+    gender = Gender[data['gender']].name
+    marital_status = Marital_Status[data['marital_status']].name
+    spouse_id = data.get('spouse_id', None)
+    occupation_type = Occupation_Type[data['occupation_type']].name
+    annual_income = data['annual_income']
+    dob = data['dob']
+
+    gql_family_members_response = requests.get(graphql_URL+'?query=query{allFamilyMembers{edges{node{familyMemberId}}}}')
+    gql_family_members_json = gql_family_members_response.json()
+    print(gql_family_members_json)
+    family_member_sort_list = []
+    for family_member in gql_family_members_json['data']['allFamilyMembers']['edges']:
+        family_member["node"]["familyMemberId"] = int(family_member["node"]["familyMemberId"])
+        family_member_sort_list.append(family_member["node"])
+    
+    family_member_sort_list.sort(key=lambda x: x["familyMemberId"])
+    largest_familyMemberId = family_member_sort_list[-1]["familyMemberId"]
+    new_familyMemberId = str(largest_familyMemberId + 1)
+
+
+    add_family_member_url = graphql_URL + '?query=mutation{addFamilyMember' + \
+        f'(familyMemberId:"{new_familyMemberId}" ,householdId:"{household_id}",name:"{name}", gender:{gender}, maritalStatus:{marital_status}, \
+            spouseId:"{spouse_id}", occupationType:{occupation_type}, annualIncome:"{annual_income}", dob:"{dob}")' + \
+        '{familyMember{familyMemberId householdId name gender maritalStatus spouseId occupationType annualIncome dob}}}'
+    add_family_member_response = requests.post(add_family_member_url)
+    print(add_family_member_response.json())
+    print(add_family_member_response.status_code)
+    return json.dumps(add_family_member_response.json(), indent=4), add_family_member_response.status_code
 
 if __name__ == "__main__":
     app.run(port=5002, debug=True)

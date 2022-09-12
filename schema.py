@@ -1,5 +1,5 @@
 import graphene
-from graphene import relay, Field, String
+from graphene import relay, Field, String, List
 from graphene_sqlalchemy import SQLAlchemyObjectType, SQLAlchemyConnectionField
 from model import Household as HouseholdModel, Family_Member as Family_MemberModel, db_session, \
     Housing_Type as Housing_Type_Enum , Gender as Gender_Enum , \
@@ -44,7 +44,7 @@ class Query(graphene.ObjectType):
     def resolve_household(cls, info, h_id): # filter households by household_id
         return db_session.query(HouseholdModel).filter_by(household_id=h_id).first()
 
-    family_member = Field(Family_Member, h_id=graphene.String()) # filter family_members by household_id
+    family_member = List(Family_Member, h_id=graphene.String()) # filter family_members by household_id
     def resolve_family_member(cls, info, h_id):
         return db_session.query(Family_MemberModel).filter_by(household_id=h_id).all() 
         # returns a list of family members in the household
@@ -66,7 +66,7 @@ class CreateHousehold(graphene.Mutation):
         db_session.commit()
         return CreateHousehold(household=household)
 
-class CreateFamily_Member(graphene.Mutation):
+class AddFamily_Member(graphene.Mutation):
     class Arguments:
         family_member_id = graphene.String(required=True)
         household_id = graphene.String(required=True)
@@ -88,10 +88,10 @@ class CreateFamily_Member(graphene.Mutation):
         Family_MemberModel.occupation_type = Occupation_Type(occupation_type)
         db_session.add(family_member)
         db_session.commit()
-        return CreateFamily_Member(family_member=family_member)
+        return AddFamily_Member(family_member=family_member)
 
 class Mutation(graphene.ObjectType):
     create_household = CreateHousehold.Field()
-    create_family_member = CreateFamily_Member.Field()
+    add_family_member = AddFamily_Member.Field()
 
 schema = graphene.Schema(query=Query, mutation=Mutation)
