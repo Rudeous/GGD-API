@@ -27,9 +27,9 @@ Base = declarative_base() # table creation
 Base.query = db_session.query_property() # query execution
 
 class Housing_Type(enum.Enum):
-    landed = 'landed'
-    condo = 'condo'
-    hdb = 'hdb'
+    landed = "landed"
+    condo = "condo"
+    hdb = "hdb"
 
 class Gender(enum.Enum):
     male = "male"
@@ -46,19 +46,19 @@ class Occupation_Type(enum.Enum):
 
 class Household(Base):
     __tablename__ = 'household'
-    household_id = Column(Integer, primary_key=True)
+    household_id = Column(String(256), primary_key=True)
     housing_type = Column(Enum(Housing_Type))
 
 class Family_Member(Base):
     __tablename__ = 'family_member'
-    family_member_id = Column(Integer, primary_key=True)
-    household_id = Column(Integer, ForeignKey('household.id'))
+    family_member_id = Column(String(256), primary_key=True)
+    household_id = Column(String(256), ForeignKey('household.household_id'))
     name = Column(String(256))
     gender = Column(Enum(Gender)) 
     marital_status = Column(Enum(Marital_Status))
-    spouse_id = Column(Integer, ForeignKey('family_member.id'))
+    spouse_id = Column(String(256), ForeignKey('family_member.family_member_id'))
     occupation_type = Column(Enum(Occupation_Type))
-    annual_income = Column(Integer)
+    annual_income = Column(String(256))
     dob = Column(Date)
 
 
