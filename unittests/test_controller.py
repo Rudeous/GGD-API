@@ -46,3 +46,10 @@ class TestController:
         assert response.status_code == 200
         assert response.data.decode('utf-8') == render_template('index.html')
         
+    
+    def test_create_household(self, client):
+        app.testing = True
+        response = client.post('/create_household', json={'housing_type': 'landed'})
+
+        assert response.status_code == 200
+        assert response.data.decode('utf-8') == 'Household created successfully'
