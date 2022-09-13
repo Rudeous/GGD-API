@@ -5,7 +5,8 @@ from model import Household as HouseholdModel, Family_Member as Family_MemberMod
     Housing_Type as Housing_Type_Enum , Gender as Gender_Enum , \
     Marital_Status as Marital_Status_Enum, Occupation_Type as Occupation_Type_Enum
 from graphene_sqlalchemy.types import ORMField
-
+from graphene_sqlalchemy_filter import FilterableConnectionField, FilterSet
+from helper import *
 
 # use predefined python enum in graphene
 Housing_Type = graphene.Enum.from_enum(Housing_Type_Enum)
@@ -30,9 +31,8 @@ class Family_Member(SQLAlchemyObjectType):
     marital_status = ORMField(type=Marital_Status)
     occupation_type = ORMField(type=Occupation_Type)
 
-class HouseholdsJoinFamilies(graphene.Union):
-    class Meta:
-        types = (Household, Family_Member)
+
+
 
 class Query(graphene.ObjectType):
     node = relay.Node.Field()
@@ -41,9 +41,10 @@ class Query(graphene.ObjectType):
     all_households = SQLAlchemyConnectionField(Household.connection) 
     all_family_members = SQLAlchemyConnectionField(Family_Member.connection)
     
-    households_join_families = Field(List(HouseholdsJoinFamilies), h_id=String(required=True))
     # return individual entry
-    household = Field(Household, h_id=graphene.String() ) # filter by household_id
+    household = Field( Household, h_id=graphene.String() ) # filter by household_id
+
+    # student_bonus = Field(List(Household))
 
     def resolve_household(cls, info, h_id): # filter households by household_id
         return db_session.query(HouseholdModel).filter_by(household_id=h_id).first()
@@ -53,7 +54,39 @@ class Query(graphene.ObjectType):
         return db_session.query(Family_MemberModel).filter_by(household_id=h_id).all() 
         # returns a list of family members in the household
 
-    
+    # def resolve_student_bonus(cls, info, ):
+    #     # date_of_birth = date(Family_MemberModel.dob)
+    #     # print(date_of_birth ,type(date_of_birth))
+    #     query = db_session.query(Family_MemberModel).all()
+        
+    #     # join with household table
+    #     query = db_session.query(Family_MemberModel).join(HouseholdModel, Family_MemberModel.household_id == HouseholdModel.household_id).all()
+
+    #     # get age, if age < 16, continue
+    #     for family_member in query:
+    #         age = calculate_age(family_member.dob)
+    #         if age < 16:
+    #             query.remove(family_member)
+        
+    #     # calculate total income for each household by summing up the annual income of all family members
+    #     household_income = {}
+    #     for family_member in query:
+    #         if family_member.household_id not in household_income:
+    #             household_income[family_member.household_id] = 0
+    #         household_income[family_member.household_id] += int(family_member.annual_income)
+
+    #     # only accept households with total income less than 200000
+    #     household_ids = []
+    #     for household_id, income in household_income.items():
+    #         if income < 200000:
+    #             household_ids.append(household_id)
+        
+    #     # return all households with total income less than 200000
+    #     return db_session.query(HouseholdModel).filter(HouseholdModel.household_id.in_(household_ids)).all()
+
+
+        
+
     
 """
 Mutations
@@ -100,4 +133,4 @@ class Mutation(graphene.ObjectType):
     create_household = CreateHousehold.Field()
     add_family_member = AddFamily_Member.Field()
 
-schema = graphene.Schema(query=Query, mutation=Mutation, types=[Household, Family_Member, HouseholdsJoinFamilies])
+schema = graphene.Schema(query=Query, mutation=Mutation, types=[Household, Family_Member])

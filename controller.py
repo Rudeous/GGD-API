@@ -44,16 +44,12 @@ def create_household():
     household_post_url = graphql_URL +  '?query=mutation{createHousehold' + \
         f'(householdId:"{new_householdId}",housingType:{housing_type})' + \
         '{household{householdId housingType}}}'
-    print(household_post_url)
     household_post_response = requests.post(household_post_url)
-    print(household_post_response.json())
-    print(household_post_response.status_code)
     return json.dumps(household_post_response.json(), indent=4), household_post_response.status_code
 
 @app.route('/add_family_member', methods=['POST'])
 def add_family_member():
     data = request.args
-    print(data)
 
     # retrieve required fields to create a new family member entry
     household_id = data['household_id']
@@ -114,6 +110,25 @@ def search_specific_household():
         + generate_family_member_url(args) + '}}}}')
     gql_household_json = gql_household_response.json()
     return json.dumps(gql_household_json, indent=4), gql_household_response.status_code
+
+@app.route('/list_eligible', methods=['GET'])
+def list_eligible():
+    args = request.args # selection of grants to list eligible households and family members for
+    grant = args['grant']
+    # build url to query graphql server for all households with family fields specified
+    gql_households_response = requests.get(graphql_URL\
+        +'?query=query{allHouseholds{edges{node{householdId housingType familyMembers{edges{node' +\
+            '{familyMemberId spouseId name gender maritalStatus occupationType annualIncome dob} }}}}}}')
+    gql_households_json = gql_households_response.json()
+    # print(gql_households_json)
+    
+    household_list = gql_households_json['data']['allHouseholds']['edges'] # list of household_dict
+
+
+    # process json by passing into function to filter out ineligible households and family members
+    seb_eligible = check_eligibility(household_list, grant)
+    
+    return seb_eligible
 
 if __name__ == "__main__":
     app.run(port=5002, debug=True)
