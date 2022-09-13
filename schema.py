@@ -44,8 +44,8 @@ class Query(graphene.ObjectType):
     def resolve_household(cls, info, h_id): # filter households by household_id
         return db_session.query(HouseholdModel).filter_by(household_id=h_id).first()
 
-    family_member = List(Family_Member, h_id=graphene.String()) # filter family_members by household_id
-    def resolve_family_member(cls, info, h_id):
+    family_members = List(Family_Member, h_id=graphene.String()) # filter family_members by household_id
+    def resolve_family_members(cls, info, h_id):
         return db_session.query(Family_MemberModel).filter_by(household_id=h_id).all() 
         # returns a list of family members in the household
 
