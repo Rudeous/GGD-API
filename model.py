@@ -60,7 +60,11 @@ class Family_Member(Base):
     occupation_type = Column(Enum(Occupation_Type))
     annual_income = Column(String(256))
     dob = Column(Date)
-
+    household = relationship(
+        "Household",
+        primaryjoin=(household_id == Household.household_id),
+        uselist= False, backref='family_members', 
+        )
 
 
 

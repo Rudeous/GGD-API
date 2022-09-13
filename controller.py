@@ -3,6 +3,7 @@ from flask_graphql import GraphQLView
 from model import Housing_Type, Gender, Marital_Status, Occupation_Type
 import requests
 from enum import Enum
+from helper import *
 
 app = Flask(__name__)
 
@@ -43,6 +44,7 @@ def create_household():
     household_post_url = graphql_URL +  '?query=mutation{createHousehold' + \
         f'(householdId:"{new_householdId}",housingType:{housing_type})' + \
         '{household{householdId housingType}}}'
+    print(household_post_url)
     household_post_response = requests.post(household_post_url)
     print(household_post_response.json())
     print(household_post_response.status_code)
@@ -83,6 +85,20 @@ def add_family_member():
     print(add_family_member_response.json())
     print(add_family_member_response.status_code)
     return json.dumps(add_family_member_response.json(), indent=4), add_family_member_response.status_code
+
+
+@app.route('/list_all_households', methods=['GET'])
+def list_all_households():
+    # retrieve arguments to retrieve from request
+    args = request.args
+
+    # build url to query graphql server for households with family fields specified
+    gql_households_response = requests.get(graphql_URL+'?query=query{allHouseholds{edges{node{householdId housingType familyMembers{edges{node' \
+        + generate_family_member_url(args) + '}}}}}}')
+    gql_households_json = gql_households_response.json()
+    print(gql_households_json)
+    return json.dumps(gql_households_json, indent=4), gql_households_response.status_code
+
 
 if __name__ == "__main__":
     app.run(port=5002, debug=True)

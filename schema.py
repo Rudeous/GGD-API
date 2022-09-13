@@ -30,16 +30,20 @@ class Family_Member(SQLAlchemyObjectType):
     marital_status = ORMField(type=Marital_Status)
     occupation_type = ORMField(type=Occupation_Type)
 
+class HouseholdsJoinFamilies(graphene.Union):
+    class Meta:
+        types = (Household, Family_Member)
+
 class Query(graphene.ObjectType):
     node = relay.Node.Field()
 
     # return all entries
     all_households = SQLAlchemyConnectionField(Household.connection) 
     all_family_members = SQLAlchemyConnectionField(Family_Member.connection)
-
+    
+    households_join_families = Field(List(HouseholdsJoinFamilies), h_id=String(required=True))
     # return individual entry
     household = Field(Household, h_id=graphene.String() ) # filter by household_id
-
 
     def resolve_household(cls, info, h_id): # filter households by household_id
         return db_session.query(HouseholdModel).filter_by(household_id=h_id).first()
@@ -49,6 +53,8 @@ class Query(graphene.ObjectType):
         return db_session.query(Family_MemberModel).filter_by(household_id=h_id).all() 
         # returns a list of family members in the household
 
+    
+    
 """
 Mutations
 """
@@ -94,4 +100,4 @@ class Mutation(graphene.ObjectType):
     create_household = CreateHousehold.Field()
     add_family_member = AddFamily_Member.Field()
 
-schema = graphene.Schema(query=Query, mutation=Mutation)
+schema = graphene.Schema(query=Query, mutation=Mutation, types=[Household, Family_Member, HouseholdsJoinFamilies])
