@@ -1,6 +1,6 @@
 from flask import Flask, render_template, request, jsonify, json
 from flask_graphql import GraphQLView
-from model import Housing_Type, Gender, Marital_Status, Occupation_Type
+from model import Household, Housing_Type, Gender, Marital_Status, Occupation_Type
 import requests
 from enum import Enum
 from helper import *
@@ -55,6 +55,7 @@ def add_family_member():
     data = request.args
     print(data)
 
+    # retrieve required fields to create a new family member entry
     household_id = data['household_id']
     name = data['name']
     gender = Gender[data['gender']].name
@@ -66,7 +67,6 @@ def add_family_member():
 
     gql_family_members_response = requests.get(graphql_URL+'?query=query{allFamilyMembers{edges{node{familyMemberId}}}}')
     gql_family_members_json = gql_family_members_response.json()
-    print(gql_family_members_json)
     family_member_sort_list = []
     for family_member in gql_family_members_json['data']['allFamilyMembers']['edges']:
         family_member["node"]["familyMemberId"] = int(family_member["node"]["familyMemberId"])
@@ -82,8 +82,6 @@ def add_family_member():
             spouseId:"{spouse_id}", occupationType:{occupation_type}, annualIncome:"{annual_income}", dob:"{dob}")' + \
         '{familyMember{familyMemberId householdId name gender maritalStatus spouseId occupationType annualIncome dob}}}'
     add_family_member_response = requests.post(add_family_member_url)
-    print(add_family_member_response.json())
-    print(add_family_member_response.status_code)
     return json.dumps(add_family_member_response.json(), indent=4), add_family_member_response.status_code
 
 
@@ -93,12 +91,29 @@ def list_all_households():
     args = request.args
 
     # build url to query graphql server for households with family fields specified
-    gql_households_response = requests.get(graphql_URL+'?query=query{allHouseholds{edges{node{householdId housingType familyMembers{edges{node' \
+    gql_households_response = requests.get(graphql_URL\
+        +'?query=query{allHouseholds{edges{node{householdId housingType familyMembers{edges{node' \
         + generate_family_member_url(args) + '}}}}}}')
     gql_households_json = gql_households_response.json()
-    print(gql_households_json)
     return json.dumps(gql_households_json, indent=4), gql_households_response.status_code
 
+@app.route('/search_specific_household', methods=['GET'])
+def search_specific_household():
+    args = request.args # search by householdId since to get a specific household
+    # convert args to mutable dict
+    args = dict(args)
+    household_id = args['household_id']
+    args.pop('household_id') # remove household_id from args since it is not a family member field
+
+    url = graphql_URL+'?query={household(hId:"'+household_id\
+        +'"){housingType familyMembers{edges{node' \
+        + generate_family_member_url(args) + '}}}}'
+    print(url)
+    gql_household_response = requests.get(graphql_URL+'?query={household(hId: '+household_id\
+        +'){housingType familyMembers{edges{node' \
+        + generate_family_member_url(args) + '}}}}')
+    gql_household_json = gql_household_response.json()
+    return json.dumps(gql_household_json, indent=4), gql_household_response.status_code
 
 if __name__ == "__main__":
     app.run(port=5002, debug=True)
