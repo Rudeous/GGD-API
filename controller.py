@@ -130,9 +130,9 @@ def list_eligible():
 
 
     # process json by passing into function to filter out ineligible households and family members
-    seb_eligible = check_eligibility(household_list, grant)
+    eligible_jsonstr = check_eligibility(household_list, grant)
     
-    return seb_eligible
+    return eligible_jsonstr
 
 if __name__ == "__main__":
     # run seed data script to populate database with seed data
