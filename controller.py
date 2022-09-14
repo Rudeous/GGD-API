@@ -9,7 +9,7 @@ from flask_cors import CORS
 
 app = Flask(__name__)
 
-# graphql_URL = "http://127.0.0.1:5001/graphql" local
+# graphql_URL = "http://127.0.0.1:5001/graphql" # local
 graphql_URL = "http://gql_app:5001/graphql" # docker
 CORS(app)
 
