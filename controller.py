@@ -1,13 +1,17 @@
+import os
 from flask import Flask, render_template, request, jsonify, json
 from flask_graphql import GraphQLView
 from model import Household, Housing_Type, Gender, Marital_Status, Occupation_Type
 import requests
 from enum import Enum
 from helper import *
+from flask_cors import CORS
 
 app = Flask(__name__)
 
-graphql_URL = "http://127.0.0.1:5001/graphql"
+# graphql_URL = "http://127.0.0.1:5001/graphql" local
+graphql_URL = "http://gql_app:5001/graphql" # docker
+CORS(app)
 
 @app.route('/hello')
 def hello():
@@ -131,5 +135,7 @@ def list_eligible():
     return seb_eligible
 
 if __name__ == "__main__":
-    app.run(port=5002, debug=True)
+    # run seed data script to populate database with seed data
+    os.system('python seed_db.py')
+    app.run(port=5002, debug=True, host='0.0.0.0')
 

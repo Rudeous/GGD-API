@@ -5,7 +5,6 @@ from model import Household as HouseholdModel, Family_Member as Family_MemberMod
     Housing_Type as Housing_Type_Enum , Gender as Gender_Enum , \
     Marital_Status as Marital_Status_Enum, Occupation_Type as Occupation_Type_Enum
 from graphene_sqlalchemy.types import ORMField
-from graphene_sqlalchemy_filter import FilterableConnectionField, FilterSet
 from helper import *
 
 # use predefined python enum in graphene

@@ -1,0 +1,45 @@
+version: "3.8"
+
+# volumes:
+#   db_data:
+
+
+services:
+  ####################################
+  # controller image 
+  ####################################
+  controller:
+    build: 
+      context: ./
+      dockerfile: ./controller.Dockerfile
+    image: rudeous/ggd-api:controller
+    container_name: controller
+    restart: always
+    environment:
+      PYTHONUNBUFFERED: "1"
+    ports:
+      - 5002:5002
+    # volumes:
+    #   - db_data:/app/db_data
+
+  
+  ####################################
+  # graphql app image
+  ####################################
+  gql_app:
+    build:
+      context: ./
+      dockerfile: ./gql_app.Dockerfile
+    image: rudeous/ggd-api:gql_app
+    container_name: gql_app
+    restart: always
+    environment:
+      PYTHONUNBUFFERED: "1"
+    ports:
+      - 5001:5001
+    depends_on:
+      - controller
+    # volumes:
+    #   - db_data:/var
+
+    
